@@ -76,6 +76,7 @@ func (c *Command) List() bool {
 
 // Running `grid help` will list commands in this order.
 var commands = []*Command{
+	cmdSchedule,
 	cmdJobs,
 	cmdTarget,
 	cmdVersion,
