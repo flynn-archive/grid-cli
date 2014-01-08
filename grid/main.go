@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
@@ -13,6 +14,18 @@ import (
 
 func targetPath() string {
 	return filepath.Join(homePath(), ".thegrid")
+}
+
+func getTarget() string {
+	if _, err := os.Stat(targetPath()); os.IsNotExist(err) {
+		return "127.0.0.1"
+	}
+	data, _ := ioutil.ReadFile(targetPath())
+	return string(data)
+}
+
+func setTarget(addr string) error {
+	return ioutil.WriteFile(targetPath(), []byte(addr), 0644)
 }
 
 func homePath() string {
@@ -63,6 +76,7 @@ func (c *Command) List() bool {
 
 // Running `grid help` will list commands in this order.
 var commands = []*Command{
+	cmdJobs,
 	cmdTarget,
 	cmdVersion,
 	cmdHelp,
@@ -105,4 +119,11 @@ func listRec(w io.Writer, a ...interface{}) {
 			w.Write([]byte{'\n'})
 		}
 	}
+}
+
+func assert(err error) error {
+	if err != nil {
+		log.Fatal(err)
+	}
+	return err
 }
