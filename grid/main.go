@@ -123,9 +123,8 @@ func listRec(w io.Writer, a ...interface{}) {
 	}
 }
 
-func assert(err error) error {
+func assert(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return err
 }
