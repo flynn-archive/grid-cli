@@ -1,0 +1,20 @@
+language: go
+go:
+  - 1.2
+  - tip
+
+before_install:
+  - export PATH=$HOME/gopath/bin:$PATH
+
+script:
+  - mkdir -p build && go build -race -o build/grid ./...
+  - build/grid version
+
+notifications:
+  irc:
+    channels:
+      - "chat.freenode.net#flynn"
+    use_notice: true
+    skip_join: true
+    template:
+      - "%{repository}/%{branch} - %{commit}: %{message} %{build_url}"

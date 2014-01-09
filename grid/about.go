@@ -6,7 +6,7 @@ var helpAbout = &Command{
 	Long: `
 [license here]
 
-For source code to grid and related projects:
+For source code to grid and related Flynn projects:
 
     https://github.com/flynn
 
