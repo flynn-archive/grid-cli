@@ -79,6 +79,7 @@ var commands = []*Command{
 	cmdSchedule,
 	cmdJobs,
 	cmdTarget,
+	cmdSelfUpdate,
 	cmdVersion,
 	cmdHelp,
 
