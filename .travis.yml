@@ -11,6 +11,7 @@ before_install:
   - sudo apt-get install s3cmd
 
 script:
+  - go get ./...
   - mkdir -p build && go build -race -o build/grid ./...
   - build/grid version > version
 
