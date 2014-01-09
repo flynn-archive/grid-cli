@@ -1,9 +1,12 @@
 package main
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"runtime"
@@ -51,7 +54,16 @@ func updateSelf() {
 	assert(err)
 	f, err := ioutil.TempFile("", "grid-update")
 	assert(err)
-	_, err = io.Copy(f, resp.Body)
+	z, err := gzip.NewReader(resp.Body)
+	assert(err)
+	defer z.Close()
+	t := tar.NewReader(z)
+	hdr, err := t.Next()
+	assert(err)
+	if hdr.Name != "grid" {
+		log.Fatal("bad tarball")
+	}
+	_, err = io.Copy(f, t)
 	assert(err)
 	f.Close()
 	assert(f.Chmod(info.Mode().Perm()))
