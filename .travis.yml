@@ -17,12 +17,14 @@ script:
 
 after_success:
   - GOOS=linux go build -o build/grid ./...
-  - cd build && tar -zcf ../flynn-grid_Linux_x86_64.tgz grid
+  - cd build && tar -zcf ../flynn-grid_Linux_x86_64.tgz grid && cd ..
   - GOOS=darwin go build -o build/grid ./...
-  - cd build && tar -zcf ../flynn-grid_Darwin_x86_64.tgz grid
-  - s3cmd -P put flynn-grid_Linux_x86_64.tgz s3://progrium-flynn/flynn-grid/dev
-  - s3cmd -P put flynn-grid_Darwin_x86_64.tgz s3://progrium-flynn/flynn-grid/dev
-  - s3cmd -P put version s3://progrium-flynn/flynn-grid/dev
+  - cd build && tar -zcf ../flynn-grid_Darwin_x86_64.tgz grid && cd ..
+  - sed -i "s|SECRET_KEY|$AWS_SECRET_ACCESS_KEY|" .s3cfg
+  - sed -i "s/ACCESS_KEY/$AWS_ACCESS_KEY_ID/" .s3cfg
+  - s3cmd -c .s3cfg -P put flynn-grid_Linux_x86_64.tgz s3://progrium-flynn/flynn-grid/dev
+  - s3cmd -c .s3cfg -P put flynn-grid_Darwin_x86_64.tgz s3://progrium-flynn/flynn-grid/dev
+  - s3cmd -c .s3cfg -P put version s3://progrium-flynn/flynn-grid/dev
 
 env:
   global:
