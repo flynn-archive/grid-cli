@@ -104,6 +104,7 @@ func main() {
 				os.Exit(2)
 			}
 			cmd.Run(cmd, cmd.Flag.Args())
+			showUpdateNotice()
 			return
 		}
 	}

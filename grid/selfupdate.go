@@ -10,11 +10,40 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
+	"time"
 
 	"bitbucket.org/kardianos/osext"
 )
 
 // TODO: checksum downloads
+
+var showUpdateNoticeCh = make(chan bool, 1)
+
+func init() {
+	if Version == "dev" || (len(os.Args) > 1 && os.Args[1] == "selfupdate") {
+		showUpdateNoticeCh <- false
+		return
+	}
+	go func() {
+		shouldUpdate, err := checkForUpdate()
+		if err == nil && shouldUpdate {
+			showUpdateNoticeCh <- true
+			return
+		}
+		showUpdateNoticeCh <- false
+	}()
+}
+
+func showUpdateNotice() {
+	select {
+	case show := <-showUpdateNoticeCh:
+		if show {
+			fmt.Fprintln(os.Stderr, "\033[32mNew version is available. Run `grid selfupdate` to get it. \033[39m")
+		}
+	case <-time.After(time.Second):
+	}
+}
 
 var cmdSelfUpdate = &Command{
 	Run:   runSelfUpdate,
@@ -28,20 +57,31 @@ func runSelfUpdate(cmd *Command, args []string) {
 		cmd.printUsage()
 		os.Exit(2)
 	}
-	resp, err := http.Get("https://s3.amazonaws.com/progrium-flynn/flynn-grid/dev/version")
-	assert(err)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	assert(err)
-	version := string(body)
-	if version == "dev" {
-		updateSelf()
-		return
-	}
-	if version == Version {
-		fmt.Println("Already up to date.")
+	if Version != "dev" {
+		shouldUpdate, err := checkForUpdate()
+		assert(err)
+		if !shouldUpdate {
+			fmt.Println("Already up to date.")
+			return
+		}
 	}
 	updateSelf()
+}
+
+func checkForUpdate() (bool, error) {
+	resp, err := http.Get("https://s3.amazonaws.com/progrium-flynn/flynn-grid/dev/version")
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+	if strings.TrimSpace(string(body)) != Version {
+		return true, nil
+	}
+	return false, nil
 }
 
 func updateSelf() {

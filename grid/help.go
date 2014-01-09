@@ -117,6 +117,7 @@ func printAllUsage() {
 
 func usage() {
 	printUsage()
+	showUpdateNotice()
 	os.Exit(2)
 }
 
