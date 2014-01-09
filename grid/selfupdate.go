@@ -48,12 +48,6 @@ func updateSelf() {
 	resp, err := http.Get("https://s3.amazonaws.com/progrium-flynn/flynn-grid/dev/grid-cli_" + runtime.GOOS + "_" + runtime.GOARCH + ".tgz")
 	assert(err)
 	defer resp.Body.Close()
-	selfpath, err := osext.Executable()
-	assert(err)
-	info, err := os.Stat(selfpath)
-	assert(err)
-	f, err := ioutil.TempFile("", "grid-update")
-	assert(err)
 	z, err := gzip.NewReader(resp.Body)
 	assert(err)
 	defer z.Close()
@@ -63,11 +57,22 @@ func updateSelf() {
 	if hdr.Name != "grid" {
 		log.Fatal("grid binary not found in tarball")
 	}
-	_, err = io.Copy(f, t)
+	selfpath, err := osext.Executable()
 	assert(err)
-	f.Close()
-	assert(f.Chmod(info.Mode().Perm()))
-	assert(os.Remove(selfpath))
-	assert(os.Rename(f.Name(), selfpath))
+	info, err := os.Stat(selfpath)
+	assert(err)
+	assert(os.Rename(selfpath, selfpath+".old"))
+	f, err := os.OpenFile(selfpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
+	if err != nil {
+		assert(os.Rename(selfpath+".old", selfpath))
+		assert(err)
+	}
+	defer f.Close()
+	_, err = io.Copy(f, t)
+	if err != nil {
+		assert(os.Rename(selfpath+".old", selfpath))
+		assert(err)
+	}
+	assert(os.Remove(selfpath + ".old"))
 	fmt.Println("Updated.")
 }
