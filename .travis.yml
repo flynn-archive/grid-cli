@@ -1,14 +1,32 @@
 language: go
 go:
   - 1.2
-  - tip
+
+branches:
+  only:
+    - master
 
 before_install:
   - export PATH=$HOME/gopath/bin:$PATH
+  - sudo apt-get install s3cmd
 
 script:
   - mkdir -p build && go build -race -o build/grid ./...
-  - build/grid version
+  - build/grid version > version
+
+after_success:
+  - GOOS=linux go build -o build/grid ./...
+  - cd build && tar -zcf ../flynn-grid_Linux_x86_64.tgz grid
+  - GOOS=darwin go build -o build/grid ./...
+  - cd build && tar -zcf ../flynn-grid_Darwin_x86_64.tgz grid
+  - s3cmd -P put flynn-grid_Linux_x86_64.tgz s3://progrium-flynn/flynn-grid/dev
+  - s3cmd -P put flynn-grid_Darwin_x86_64.tgz s3://progrium-flynn/flynn-grid/dev
+  - s3cmd -P put version s3://progrium-flynn/flynn-grid/dev
+
+env:
+  global:
+    - secure: "Bi4AyeCINBwjkEd9g869X2OTAMCxAotFn90zox3WkXe934ekmVGDKvFswBo9\n2DtjXbWCTd5VpJBhB/ufiz1BZPAlSf586eKfRi5BasWG3rUcrU6uSGNlNMQu\nnOaxZIJZxczBIMJFu8NswcwFA4EtbsZVcKq37U3vXkdl359Mf94="
+    - secure: "AoYKZvVPE1mvEOueTDvs0RLLqowu7cZob4HS89J/aNtt/vuNzvIdYWZJ0J52\nm5jddvyJoXxMZMvf/HPWbCu2ySPjvCx5W9OryaTrSfiy/2UgY9NCwdfK/EYF\nnOUjQxi0ZcOpGSR7ZdK0tewhjvtZJLG/KwUWKMF9l7WPtei2njc="
 
 notifications:
   irc:
