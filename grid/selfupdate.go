@@ -85,6 +85,7 @@ func checkForUpdate() (bool, error) {
 }
 
 func updateSelf() {
+	fmt.Println("Downloading latest version...")
 	resp, err := http.Get("https://s3.amazonaws.com/progrium-flynn/flynn-grid/dev/grid-cli_" + runtime.GOOS + "_" + runtime.GOARCH + ".tgz")
 	assert(err)
 	defer resp.Body.Close()
@@ -97,6 +98,7 @@ func updateSelf() {
 	if hdr.Name != "grid" {
 		log.Fatal("grid binary not found in tarball")
 	}
+	defer t.Next()
 	selfpath, err := osext.Executable()
 	assert(err)
 	info, err := os.Stat(selfpath)
