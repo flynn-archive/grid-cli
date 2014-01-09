@@ -17,9 +17,9 @@ script:
 
 after_success:
   - GOOS=linux go build -o build/grid ./...
-  - cd build && tar -zcf ../grid-cli_linux_x86_64.tgz grid && cd ..
+  - cd build && tar -zcf ../grid-cli_linux_amd64.tgz grid && cd ..
   - GOOS=darwin go build -o build/grid ./...
-  - cd build && tar -zcf ../grid-cli_darwin_x86_64.tgz grid && cd ..
+  - cd build && tar -zcf ../grid-cli_darwin_amd64.tgz grid && cd ..
   - sed -i "s|SECRET_KEY|$AWS_SECRET_ACCESS_KEY|" .s3cfg
   - sed -i "s/ACCESS_KEY/$AWS_ACCESS_KEY_ID/" .s3cfg
   - s3cmd -c .s3cfg -P put grid-cli_linux_amd64.tgz s3://progrium-flynn/flynn-grid/dev/

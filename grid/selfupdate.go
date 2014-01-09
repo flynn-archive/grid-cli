@@ -61,7 +61,7 @@ func updateSelf() {
 	hdr, err := t.Next()
 	assert(err)
 	if hdr.Name != "grid" {
-		log.Fatal("bad tarball")
+		log.Fatal("grid binary not found in tarball")
 	}
 	_, err = io.Copy(f, t)
 	assert(err)
