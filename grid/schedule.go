@@ -1,11 +1,13 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/flynn/go-discoverd"
 	"github.com/flynn/go-dockerclient"
+	hosts "github.com/flynn/lorne/client"
 	"github.com/flynn/sampi/client"
 	"github.com/flynn/sampi/types"
 	"github.com/nu7hatch/gouuid"
@@ -32,7 +34,8 @@ func runSchedule(cmd *Command, args []string) {
 	assert(err)
 	hostid := hosts[0].Attrs["id"]
 
-	jobid, err := uuid.NewV4()
+	id, err := uuid.NewV4()
+	jobid := id.String()
 	assert(err)
 	config := docker.Config{
 		Image: args[0],
@@ -48,8 +51,26 @@ func runSchedule(cmd *Command, args []string) {
 	schedReq := &sampi.ScheduleReq{
 		Incremental: true,
 		HostJobs: map[string][]*sampi.Job{
-			hostid: {{ID: jobid.String(), Config: &config, TCPPorts: 1}}},
+			hostid: {{ID: jobid, Config: &config, TCPPorts: 1}}},
 	}
 	_, err = sched.Schedule(schedReq)
 	assert(err)
+
+	if port := getPort(hostid, jobid); port != "" {
+		fmt.Println(jobid + " created, listening at " + hosts[0].Host + ":" + port)
+	} else {
+		fmt.Println("Service was not scheduled")
+		os.Exit(1)
+	}
+}
+
+func getPort(hostid, jobid string) string {
+	host, err := hosts.New(hostid)
+	assert(err)
+	job, err := host.GetJob(jobid)
+	assert(err)
+	for portspec := range job.Job.Config.ExposedPorts {
+		return strings.Split(portspec, "/")[0]
+	}
+	return ""
 }
