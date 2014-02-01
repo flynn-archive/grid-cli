@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/flynn/go-discoverd"
-	"github.com/flynn/lorne/client"
+	"github.com/flynn/go-flynn/cluster"
 )
 
 var cmdJobs = &Command{
@@ -22,14 +22,17 @@ func runJobs(cmd *Command, args []string) {
 	}
 	err := discoverd.Connect(getTarget() + ":55002") // TODO: fix this
 	assert(err)
-	services, err := discoverd.Services("flynn-lorne", discoverd.DefaultTimeout)
+	client, err := cluster.NewClient()
 	assert(err)
-	for _, service := range services {
-		host, err := client.New(service.Attrs["id"])
+	hosts, err := client.ListHosts()
+	assert(err)
+	for hostid, _ := range hosts {
+		host, err := client.ConnectHost(hostid)
 		assert(err)
-		jobs, err := host.JobList()
-		for k, _ := range jobs {
-			fmt.Println(k, "\t", "["+service.Attrs["id"]+"]")
+		jobs, err := host.ListJobs()
+		assert(err)
+		for jobid, _ := range jobs {
+			fmt.Println(jobid, "\t", "["+hostid+"]")
 		}
 	}
 }
