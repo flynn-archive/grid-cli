@@ -53,18 +53,36 @@ func runSchedule(cmd *Command, args []string) {
 		HostJobs: map[string][]*host.Job{
 			hostid: {{ID: jobid, Config: &config, TCPPorts: 1}}},
 	}
+
+	hostClient, err := client.ConnectHost(hostid)
+	assert(err)
+
+	events := make(chan host.Event)
+	addr := make(chan string)
+	hostClient.StreamEvents(jobid, events)
+	go func() {
+		for event := range events {
+			if event.Event == "start" {
+				addr <- getAddr(hostClient, hostid, jobid)
+			} else {
+				fmt.Println("Service was not scheduled")
+				os.Exit(1)
+			}
+		}
+	}()
 	_, err = client.AddJobs(jobReq)
 	assert(err)
 
-	if addr := getAddr(client, hostid, jobid); addr != "" {
-		fmt.Println(jobid + " created, listening at " + addr)
+	if a := <-addr; a != "" {
+		fmt.Println(jobid + " created, listening at " + a)
 	} else {
-		fmt.Println("Service was not scheduled")
+		fmt.Println("Service was scheduled but no exposed port found")
 		os.Exit(1)
 	}
+
 }
 
-func getAddr(client *cluster.Client, hostid, jobid string) string {
+func getAddr(host cluster.Host, hostid, jobid string) string {
 	services, err := discoverd.Services("flynn-host", discoverd.DefaultTimeout)
 	var service *discoverd.Service
 	for _, s := range services {
@@ -76,8 +94,6 @@ func getAddr(client *cluster.Client, hostid, jobid string) string {
 	if service == nil {
 		return ""
 	}
-	host, err := client.ConnectHost(hostid)
-	assert(err)
 	job, err := host.GetJob(jobid)
 	assert(err)
 	for portspec := range job.Job.Config.ExposedPorts {
