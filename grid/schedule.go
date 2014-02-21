@@ -57,7 +57,7 @@ func runSchedule(cmd *Command, args []string) {
 	hostClient, err := client.ConnectHost(hostid)
 	assert(err)
 
-	events := make(chan host.Event)
+	events := make(chan *host.Event)
 	addr := make(chan string)
 	hostClient.StreamEvents(jobid, events)
 	go func() {
