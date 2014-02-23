@@ -57,15 +57,18 @@ func runSchedule(cmd *Command, args []string) {
 	hostClient, err := client.ConnectHost(hostid)
 	assert(err)
 
-	events := make(chan host.Event)
+	events := make(chan *host.Event)
 	addr := make(chan string)
 	hostClient.StreamEvents(jobid, events)
 	go func() {
 		for event := range events {
-			if event.Event == "start" {
+			switch event.Event {
+			case "start":
 				addr <- getAddr(hostClient, hostid, jobid)
-			} else {
-				fmt.Println("Service was not scheduled")
+				return
+			case "error", "stop":
+				fmt.Println("Scheduling error")
+				// TODO: read error from host
 				os.Exit(1)
 			}
 		}
