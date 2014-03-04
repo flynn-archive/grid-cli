@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-
-	"github.com/flynn/go-discoverd"
 	"github.com/flynn/go-flynn/cluster"
 )
 
@@ -20,8 +18,6 @@ func runJobs(cmd *Command, args []string) {
 		cmd.printUsage()
 		os.Exit(2)
 	}
-	err := discoverd.Connect(getTarget() + ":55002") // TODO: fix this
-	assert(err)
 	client, err := cluster.NewClient()
 	assert(err)
 	hosts, err := client.ListHosts()
