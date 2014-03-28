@@ -47,7 +47,6 @@ func runSchedule(cmd *Command, args []string) {
 	}
 
 	jobReq := &host.AddJobsReq{
-		Incremental: true,
 		HostJobs: map[string][]*host.Job{
 			hostid: {{ID: jobid, Config: &config, TCPPorts: 1}}},
 	}
