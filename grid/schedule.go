@@ -51,7 +51,7 @@ func runSchedule(cmd *Command, args []string) {
 			hostid: {{ID: jobid, Config: &config, TCPPorts: 1}}},
 	}
 
-	hostClient, err := client.ConnectHost(hostid)
+	hostClient, err := client.DialHost(hostid)
 	assert(err)
 
 	events := make(chan *host.Event)

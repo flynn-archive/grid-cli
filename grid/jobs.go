@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"github.com/flynn/go-flynn/cluster"
+	"os"
 )
 
 var cmdJobs = &Command{
@@ -23,7 +23,7 @@ func runJobs(cmd *Command, args []string) {
 	hosts, err := client.ListHosts()
 	assert(err)
 	for hostid, _ := range hosts {
-		host, err := client.ConnectHost(hostid)
+		host, err := client.DialHost(hostid)
 		assert(err)
 		jobs, err := host.ListJobs()
 		assert(err)
